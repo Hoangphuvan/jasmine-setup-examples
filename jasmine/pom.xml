@@ -1,0 +1,40 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>net.ahexample</groupId>
+  <artifactId>ahexample-jasmine</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <name>Jasmine Example</name>
+  <description>Example of a maven project for unit testing using Jasmne</description>
+
+  <build>
+    <plugins>
+	  <!-- unit test plugin -->
+      <plugin>
+        <groupId>com.github.searls</groupId>
+        <artifactId>jasmine-maven-plugin</artifactId>
+        <version>1.3.1.3</version>
+        <executions>
+			<!-- for running 'mvn jasmine:bdd'  to start jasmine server -->
+			<!-- run tests by using browser to connect to the server on URL shown on the console -->
+			<!-- test run results are shown on the browser -->
+			<execution>
+				<id>jasmine-bdd</id>
+				<goals>
+					<goal>bdd</goal>
+				</goals>
+			</execution>
+			
+			<!-- for running 'mvn test' -->
+			<!-- test run results are shown on the console output -->
+			<execution>
+				<goals>
+					<goal>test</goal>
+				</goals>
+			</execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>
