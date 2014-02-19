@@ -6,7 +6,7 @@
   <artifactId>ahexample-jasmine</artifactId>
   <version>1.0-SNAPSHOT</version>
   <name>Jasmine Example</name>
-  <description>Example of a maven project for unit testing using Jasmne</description>
+  <description>Example of a maven project for JavaScript testing using Jasmine</description>
 
   <build>
     <plugins>
@@ -29,6 +29,7 @@
 			<!-- for running 'mvn test' -->
 			<!-- test run results are shown on the console output -->
 			<execution>
+                <id>jasmine-test</id>
 				<goals>
 					<goal>test</goal>
 				</goals>
