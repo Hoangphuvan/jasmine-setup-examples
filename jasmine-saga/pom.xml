@@ -1,10 +1,11 @@
 <?xml version="1.0"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.ahex</groupId>
-	<artifactId>ahex-jasmine-saga</artifactId>
+	<groupId>net.ahexample</groupId>
+	<artifactId>ahexample-jasmine-saga</artifactId>
 	<version>1.0-SNAPSHOT</version>
 	<name>Jasmine with Saga Example</name>
+    <description>Example of a maven project for JavaScript coverage using Jasmine and Saga</description>
 	<build>
 		<plugins>
 			<!-- unit test plugin -->
@@ -25,6 +26,7 @@
 					<!-- for running 'mvn test' -->
 					<!-- test run results are shown on the console output -->
 					<execution>
+                        <id>jasmine-test</id>
 						<goals>
 							<goal>test</goal>
 						</goals>
