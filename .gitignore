@@ -1,2 +1,10 @@
+.tmp
+
 # npm modules
 node_modules/
+
+# grunt
+.grunt
+
+# sonar
+.sonar
