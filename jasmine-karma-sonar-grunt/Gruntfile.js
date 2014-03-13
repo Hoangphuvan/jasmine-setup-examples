@@ -1,3 +1,5 @@
+'use strict';
+
 module.exports = function(grunt) {
 	var $srcFiles = 'src/main/javascript/**/*.js';
 	var $testFiles = 'src/test/javascript/*Test.js';
@@ -5,8 +7,23 @@ module.exports = function(grunt) {
 	var $junitResults = $outputDir + '/junit-test-results.xml';
 	var $jasmineSpecRunner = $outputDir + '/_SpecRunner.html';
 	var $coverageOutputDir = $outputDir + '/coverage';
-	var $coverageResults = $coverageOutputDir + '/PhantomJS 1.9.7 (Mac OS X)/lcov.info';
+	var $coverageResults = $coverageOutputDir + '/' + phantomJSOutputDirName() + '/lcov.info';
 	var $sonarSources =	makeSonarSourceDirs($srcFiles);
+	
+	/*
+	 * Create name for phantomjs output directory, which must match the directory
+	 * name that contains the coverage's lcov file.
+	 *
+	 * For example on Mac OS X, the output is something like:
+	 *    PhantomJS 1.9.7 (Mac OS X)
+	 */
+	function phantomJSOutputDirName() {
+		var $phantomjs = require('phantomjs');
+		var $os = require('os');
+		var $osName = ($os.type() == 'Darwin'? 'Mac OS X' : $os.type());
+		
+		return 'PhantomJS ' + $phantomjs.version + ' (' + $osName + ')';
+	}
 	
 	/*
 	 * Create sonar source object for each directory of source file pattern.
@@ -68,6 +85,7 @@ module.exports = function(grunt) {
 			      outputFile: $junitResults
 			    },
 				preprocessors: {
+					// source files must be a literal string
 					'src/main/javascript/**/*.js': [ 'coverage' ]
 				},
 				coverageReporter: {
