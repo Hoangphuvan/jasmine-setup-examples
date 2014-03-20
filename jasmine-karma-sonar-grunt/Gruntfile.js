@@ -7,47 +7,7 @@ module.exports = function(grunt) {
 	var $junitResults = $outputDir + '/junit-test-results.xml';
 	var $jasmineSpecRunner = $outputDir + '/_SpecRunner.html';
 	var $coverageOutputDir = $outputDir + '/coverage';
-	var $coverageResults = $coverageOutputDir + '/' + phantomJSOutputDirName() + '/lcov.info';
-	var $sonarSources =	makeSonarSourceDirs($srcFiles);
 	
-	/*
-	 * Create name for phantomjs output directory, which must match the directory
-	 * name that contains the coverage's lcov file.
-	 *
-	 * For example on Mac OS X, the output is something like:
-	 *    PhantomJS 1.9.7 (Mac OS X)
-	 */
-	function phantomJSOutputDirName() {
-		var $phantomjs = require('phantomjs');
-		var $os = require('os');
-		var $osName = ($os.type() == 'Darwin'? 'Mac OS X' : $os.type());
-		
-		return 'PhantomJS ' + $phantomjs.version + ' (' + $osName + ')';
-	}
-	
-	/*
-	 * Create sonar source object for each directory of source file pattern.
-	 */
-	function makeSonarSourceDirs($filesPattern) {
-		var $path = require('path');
-		var $dirs = [];
-		
-		grunt.file.expand(
-			{
-				filter: function($filePath) {
-					$dirs.push({
-						path: $path.dirname($filePath),
-						prefix: '.',	// path prefix in lcov.info
-						coverageReport: $coverageResults,
-						testReport: $junitResults
-					});
-				}
-			},
-			$filesPattern
-		);
-		
-		return $dirs;
-	}
 	
 	grunt.initConfig({
 		pkg: grunt.file.readJSON('package.json'),
@@ -103,20 +63,94 @@ module.exports = function(grunt) {
 					key: 'net.ahexample:ahexample-jasmine-karma-sonar',
 					name: 'Jasmine with Karma and SonarQube Example',
 					version: '0.0.1'
-				},
-				sources: $sonarSources
+				}
+				
+				// sources property is set at runtime (see below)
 			}
 		},
 		
 		clean: [ $outputDir ]
 	});
+
+
+	/*
+	 * Task to set karma_sonar's sources property.
+	 * This is needed because karma (coverage) stores its results in a
+	 * directory whose name uses the browser's user agent info
+	 * (name/version and the platform name).
+	 * The latter may well he different to the OS name and so its needs an
+	 * OS to platform translator.
+	 * For example, OS name for Apple Mac OS X is Darwin.
+	 */
+	grunt.registerTask('set-karma-sonar-sources-property', function() {
+		var $done = this.async();
+		var $phantomjs = require('karma-phantomjs-launcher/node_modules/phantomjs');
+		var $spawn = require('child_process').spawn;
+		var $phantomUserAgent = $spawn($phantomjs.path,
+			// phantomjs script to print user agent string
+			[ 'lib/phantomjs-useragent.js' ]
+		);
+	
+		/*
+		 * Construct coverage LCOV file path from PhantomJS'
+		 * user agent string, then use it to set karma_sonar's
+		 * sources property.
+		 */
+		$phantomUserAgent.stdout.on('data', function(msg) {
+			var $useragent = require('karma/node_modules/useragent');
+			var $agent = $useragent.parse(msg);
+			// An example of dirName is 'PhantomJS 1.9.7 (Mac OS X)'
+			var $dirName = $agent.toAgent() + ' (' + $agent.os + ')';
+			var $coverageResults = $coverageOutputDir + '/' + $dirName + '/lcov.info';
+			var $sonarSources =	makeSonarSourceDirs($srcFiles, $coverageResults);
+			var $karmaSonarConfig = 'karma_sonar';
+			var $ksConfig = grunt.config($karmaSonarConfig);
+			
+			grunt.log.writeln('coverage LCOV file: ' + $coverageResults);
+			$ksConfig['your_target']['sources'] = $sonarSources;
+			grunt.config($karmaSonarConfig, $ksConfig);
+			
+		});
+	
+		$phantomUserAgent.on('close', function(exitCode) {
+			$done();
+		});
+		
+	
+		/*
+		 * Create sonar source object for each directory of source file pattern.
+		 */
+		function makeSonarSourceDirs($filesPattern, $coverageResults) {
+			var $path = require('path');
+			var $dirs = [];
+		
+			grunt.file.expand(
+				{
+					filter: function($filePath) {
+						$dirs.push({
+							path: $path.dirname($filePath),
+							prefix: '.',	// path prefix in lcov.info
+							coverageReport: $coverageResults,
+							testReport: $junitResults
+						});
+					}
+				},
+				$filesPattern
+			);
+		
+			return $dirs;
+		}
+	});
+	
 	
 	grunt.loadNpmTasks('grunt-contrib-clean');
 	grunt.loadNpmTasks('grunt-contrib-jasmine');
 	grunt.loadNpmTasks('grunt-karma');
 	grunt.loadNpmTasks('grunt-karma-sonar');
 
+
 	grunt.registerTask('test', [ 'jasmine', 'karma:continuous' ]);
-	grunt.registerTask('sonar', [ 'karma_sonar' ]);
+	grunt.registerTask('sonar-only', [ 'set-karma-sonar-sources-property', 'karma_sonar' ]);
+	grunt.registerTask('sonar', [ 'test', 'sonar-only' ]);
 	grunt.registerTask('default', 'test');
 }
